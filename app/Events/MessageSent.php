@@ -13,8 +13,8 @@ class MessageSent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public $room_id;
     public $sender_id;
-    public $receiver_id;
     public $message;
 
     /**
@@ -22,10 +22,10 @@ class MessageSent implements ShouldBroadcast
      *
      * @return void
      */
-    public function __construct($sender_id, $receiver_id, $message)
+    public function __construct($room_id, $sender_id, $message)
     {
+        $this->room_id = $room_id;
         $this->sender_id = $sender_id;
-        $this->receiver_id = $receiver_id;
         $this->message = $message;
     }
 
@@ -36,7 +36,7 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('chat.' . $this->sender_id . $this->receiver_id);
+        return new PrivateChannel('chat.' . $this->room_id);
     }
 
     public function broadcastAs()

@@ -10,8 +10,8 @@
             <div class="text-right mb-4">
                 <select name="receiver" id="receiverSelect">
                     <option value="" disabled selected>Pilih User</option>
-                    @foreach ($users as $user)
-                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    @foreach ($rooms as $room)
+                        <option value="{{ $room->id }}">{{ $room->chatTo->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -33,12 +33,11 @@
     @push('script')
         <script>
             let senderId = '{{ auth()->user()->id }}'
-            let receiverId = senderId == '1' ? '2' : '1'
+            let roomId = '{{ $room->id }}'
 
             $(document).ready(() => {
                 $('#receiverSelect').on('change', function() {
-                    let id = $(this).val()
-                    axios.get(`/message/${id}`)
+                    axios.get(`/message/${roomId}`)
                         .then((res) => {
                             let data = res.data.data
                             data.forEach(list => {
@@ -57,18 +56,16 @@
 
                     axios.post('/send-message', {
                             sender_id: senderId,
-                            receiver_id: receiverId,
+                            room_id: roomId,
                             message: message
                         })
                         .then(() => {
-                            let message = $('input[name="message"]')
-                            message.val('')
+                            $('input[name="message"]').val('')
                         })
                 })
 
-                window.Echo.private(`chat.${senderId}${receiverId}`)
+                window.Echo.private(`chat.${roomId}`)
                     .listen('.messageSent', (e) => {
-                        console.log(e)
                         let classes = e.sender_id == '{{ auth()->user()->id }}' ? 'chatbox-user' :
                             'chatbox-not-user'
                         $('.chatbox').append(`<div class=${classes}><div><span>${e.message}</span></div></div>`)

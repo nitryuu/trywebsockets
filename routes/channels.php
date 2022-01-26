@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Broadcast;
 //     return (int) $user->id === (int) $id;
 // });
 
-Broadcast::channel('chat.{sender_id}{receiver_id}', function ($user, $sender_id, $receiver_id) {
+Broadcast::channel('chat.{room_id}', function ($user, $room_id) {
     if (Auth::check()) {
-        return ['sender_id' => $user->id, 'receiver_id' => $receiver_id];
+        return ['sender_id' => $user->id, 'room_id' => $room_id];
     }
 });
