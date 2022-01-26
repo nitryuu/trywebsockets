@@ -17,7 +17,7 @@
             </div>
             <div class="bg-white overflow-hidden shadow-sm">
                 <div class="h-[calc(100vh-300px)] px-4 py-2 bg-white border-b border-gray-200 relative">
-                    <div class="chatbox max-h-[calc(100%-32px)] overflow-x-hidden" />
+                    <div class="chatbox max-h-[calc(100%-32px)] overflow-x-hidden"></div>
                     <div class="absolute bottom-0 left-0 w-full h-8">
                         <div class="inline-flex items-center w-full h-full">
                             <input type="text" name="message" class="w-full h-full">
@@ -33,10 +33,18 @@
     @push('script')
         <script>
             let senderId = '{{ auth()->user()->id }}'
-            let roomId = '{{ $room->id }}'
+            let roomId = 0
 
             $(document).ready(() => {
                 $('#receiverSelect').on('change', function() {
+                    let id = $(this).val()
+                    if (roomId) {
+                        window.Echo.leave(`chat.${roomId}`)
+                    }
+
+                    $('.chatbox div').remove()
+
+                    roomId = id
                     axios.get(`/message/${roomId}`)
                         .then((res) => {
                             let data = res.data.data
@@ -48,6 +56,17 @@
                                     `<div class=${classes}><div><span>${list.message}</span></div></div>`
                                 )
                             });
+                        })
+                        .then(() => {
+                            window.Echo.private(`chat.${roomId}`)
+                                .listen('.messageSent', (e) => {
+                                    let classes = e.sender_id == '{{ auth()->user()->id }}' ?
+                                        'chatbox-user' :
+                                        'chatbox-not-user'
+                                    $('.chatbox').append(
+                                        `<div class=${classes}><div><span>${e.message}</span></div></div>`
+                                    )
+                                })
                         })
                 })
 
@@ -63,13 +82,6 @@
                             $('input[name="message"]').val('')
                         })
                 })
-
-                window.Echo.private(`chat.${roomId}`)
-                    .listen('.messageSent', (e) => {
-                        let classes = e.sender_id == '{{ auth()->user()->id }}' ? 'chatbox-user' :
-                            'chatbox-not-user'
-                        $('.chatbox').append(`<div class=${classes}><div><span>${e.message}</span></div></div>`)
-                    })
             })
         </script>
     @endpush
